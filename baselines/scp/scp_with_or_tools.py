@@ -106,7 +106,7 @@ class SetCoverSolverFromGraph(object):
         solve_time = solver.WallTime() - init_time
 
         solution_count = collector.SolutionCount()
-        print(self.graph_description())
+        # print(self.graph_description())
         solutions = [SCPSolutions(objective=collector.ObjectiveValue(i), wall_time=solve_time)
                      for i in range(solution_count)]
             # for v in self.set_variables.values():

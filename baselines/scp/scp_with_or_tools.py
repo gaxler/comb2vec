@@ -7,6 +7,52 @@ import _pickle as pkl
 from pathlib import Path
 
 
+class SCPSolutions(object):
+
+    def __init__(self, wall_time, objective):
+        self.wall_time = wall_time
+        self.objective = objective
+
+
+class ScpStats(object):
+
+    def __init__(self, graph, solutions):
+        self._sets, self._items = bipartite.sets(graph)
+        self.adjacency = dict(graph.adjacency())
+        self._solutions = solutions
+
+    @property
+    def sets(self):
+        return len(self._sets)
+
+    @property
+    def items(self):
+        return len(self._items)
+
+    def reduce_node_size(self, nodes, func):
+        return func([len(self.adjacency[s]) for s in nodes])
+
+    @property
+    def reduced_set_size(self, func=np.mean):
+        return self.reduce_node_size(self._sets, func=func)
+
+    @property
+    def reduced_items_size(self, func=np.mean):
+        return self.reduce_node_size(self._items, func=func)
+
+    @property
+    def wall_time(self):
+        return self._solutions[-1].wall_time
+
+    @property
+    def objective(self):
+        return self._solutions[-1].objective
+
+    def as_dict(self):
+        d = {'wall_time': self.wall_time, 'objective': self.objective}
+        return d
+
+
 class SetCoverSolverFromGraph(object):
 
     def __init__(self, graph):
@@ -38,12 +84,12 @@ class SetCoverSolverFromGraph(object):
             set_vars_to_constrain_on = [self.set_variables[idx] for idx in sets_containing_items]
             self._add_ge_sum_constraint(set_vars_to_constrain_on, sum_value=sum_value)
 
-    def solve(self):
+    def solve(self, step=1):
         solver = self.solver
 
         obj_expr = solver.IntVar(0, len(self.sets), "obj_expr")
         solver.Add(obj_expr == sum(self.set_variables.values()))
-        objective = solver.Minimize(obj_expr, 3)
+        objective = solver.Minimize(obj_expr, step)
         decision_builder = solver.Phase(list(self.set_variables.values()),
                                         solver.CHOOSE_RANDOM,
                                         solver.ASSIGN_RANDOM_VALUE)
@@ -54,15 +100,18 @@ class SetCoverSolverFromGraph(object):
             collector.Add(v)
         # Add the objective.
         collector.AddObjective(obj_expr)
+
+        init_time = solver.WallTime()
         solver.Solve(decision_builder, [objective, collector])
+        solve_time = solver.WallTime() - init_time
+
         solution_count = collector.SolutionCount()
         print(self.graph_description())
-        print('Total solutions: %d' % solution_count)
-        for i in range(solution_count):
-            print('In Solution %d' % (i + 1))
+        solutions = [SCPSolutions(objective=collector.ObjectiveValue(i), wall_time=solve_time)
+                     for i in range(solution_count)]
             # for v in self.set_variables.values():
             #     print(' %s= ' % (v.DebugString()), (collector.Value(i, v)))
-            print(' Objective=', (collector.ObjectiveValue(i)))
+        return ScpStats(graph=self.graph, solutions=solutions)
 
 
 def graph_iterator_from_path(path, glob_str='*.pkl'):
@@ -77,5 +126,5 @@ if __name__ == '__main__':
 
     for g in it:
         test_g = SetCoverSolverFromGraph(graph=g)
-        test_g.solve()
+        stats = test_g.solve()
         print('-----------------------\n')

@@ -9,9 +9,10 @@ from pathlib import Path
 
 class SCPSolutions(object):
 
-    def __init__(self, wall_time, objective):
+    def __init__(self, wall_time, objective, solution_vector):
         self.wall_time = wall_time
         self.objective = objective
+        self.solution_vector = solution_vector
 
 
 class ScpStats(object):
@@ -84,6 +85,15 @@ class SetCoverSolverFromGraph(object):
             set_vars_to_constrain_on = [self.set_variables[idx] for idx in sets_containing_items]
             self._add_ge_sum_constraint(set_vars_to_constrain_on, sum_value=sum_value)
 
+    def solution_to_numpy_vector(self, solution):
+        vector_dim = len(self.set_variables)
+        x = np.zeros(vector_dim, dtype=np.int32)
+
+        for v in self.set_variables:
+            x[v] = solution.Value(self.set_variables[v])
+
+        return x
+
     def solve(self, step=1):
         solver = self.solver
 
@@ -107,7 +117,8 @@ class SetCoverSolverFromGraph(object):
 
         solution_count = collector.SolutionCount()
         # print(self.graph_description())
-        solutions = [SCPSolutions(objective=collector.ObjectiveValue(i), wall_time=solve_time)
+        solutions = [SCPSolutions(objective=collector.ObjectiveValue(i), wall_time=solve_time,
+                                  solution_vector=self.solution_to_numpy_vector(collector.Solution(i)))
                      for i in range(solution_count)]
             # for v in self.set_variables.values():
             #     print(' %s= ' % (v.DebugString()), (collector.Value(i, v)))

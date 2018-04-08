@@ -1,9 +1,20 @@
-import os
-import sys
+"""
+Adapted from:
+
+@article{dai2017learning,
+  title={Learning Combinatorial Optimization Algorithms over Graphs},
+  author={Dai, Hanjun and Khalil, Elias B and Zhang, Yuyu and Dilkina, Bistra and Song, Le},
+  journal={arXiv preprint arXiv:1704.01665},
+  year={2017}
+}
+"""
+
 import _pickle as cp
-import numpy as np
-import networkx as nx
+import sys
 from pathlib import Path
+
+import networkx as nx
+import numpy as np
 
 if __name__ == '__main__':
     save_dir = None

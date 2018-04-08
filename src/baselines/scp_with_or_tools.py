@@ -1,18 +1,15 @@
-import networkx as nx
-from networkx.algorithms import bipartite
-from ortools.constraint_solver import pywrapcp, solver_parameters_pb2
-
-import numpy as np
 import _pickle as pkl
 from pathlib import Path
 
+import numpy as np
+from networkx.algorithms import bipartite
+from ortools.constraint_solver import pywrapcp
 
-class SCPSolutions(object):
+from comb2vec.baselines.or_tools_base import ORToolsIntegerSolutionBase
 
-    def __init__(self, wall_time, objective, solution_vector):
-        self.wall_time = wall_time
-        self.objective = objective
-        self.solution_vector = solution_vector
+
+class SCPSolutions(ORToolsIntegerSolutionBase):
+    pass
 
 
 class ScpStats(object):

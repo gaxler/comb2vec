@@ -2,7 +2,7 @@ import _pickle as pkl
 import numpy as np
 from pathlib import Path
 
-from comb2vec.baselines.or_tools_base import ORToolsIntegerSolutionBase, IntegerProgramSolverFromGraph, \
+from or_tools_base import ORToolsIntegerSolutionBase, IntegerProgramSolverFromGraph, \
     graph_iterator_from_path
 
 

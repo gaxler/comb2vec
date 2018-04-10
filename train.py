@@ -72,7 +72,7 @@ def train(epoch):
         loss.backward()
         train_loss += loss.data[0]
         optimizer.step()
-        if idx % args.log_interval == 0:
+        if idx % args.log_interval == -1:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, idx * len(adj_mat), len(train_loader.dataset),
                        100. * idx / len(train_loader),

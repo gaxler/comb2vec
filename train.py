@@ -88,12 +88,15 @@ for epoch in range(1, args.epochs + 1):
     sample = Variable(torch.randn(100, model.z_dim))
     if args.cuda:
         sample = sample.cuda()
-
-    sampled_adj_mat = model.decode(sample).cpu() > 0.75
-    sampled_adj_mat =sampled_adj_mat.view(-1, num_nodes, num_nodes)
-    mat = sampled_adj_mat.data.cpu().numpy()
-    valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
-    avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
-    print('(%d) %3.2f are valid matrices' % (epoch, valids))
-    print('%3.2f mean rank' % (np.mean(avg_ranks)))
+    sampled_adj_mat = model.decode(sample).cpu()	
+    
+    for idx, th in enumerate((0.5, 0.625, 0.75, 0.95)):
+	
+	    sampled_adj_mat = sampled_adj_mat > th
+	    sampled_adj_mat = sampled_adj_mat.view(-1, num_nodes, num_nodes)
+	    mat = sampled_adj_mat.data.cpu().numpy()
+	    valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
+	    avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
+	    print('(%d)[ %d ] %5.4f are valid matrices. %5.4f non zero' % (idx+1, int(th*100), valids, np.count_nonzero(mat)/mat.size))
+	    #print('%3.2f mean rank' % (np.mean(avg_ranks)))
 

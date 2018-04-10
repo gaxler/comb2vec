@@ -30,6 +30,7 @@ args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 if args.gpus is not None and args.cuda:
     os.environ['CUDA_VISBLE_DEVICES'] = args.gpus
+    print('Using GPUs: %s' % args.gpus)
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -45,10 +46,12 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
 
 train_loader = get_loader('data_dir/mvc/cp_solutions_100_100', batch_size=32, shuffle=True)
 model = GaussianGraphVAE(num_nodes=100)
+
 if args.cuda:
     model.cuda()
 
-print(model.state_dict())
+for k, v in model.state_dict():
+    print('%s: %s' % (k, v.type()))
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 

@@ -20,6 +20,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
+parser.add_argument('--nodes', type=int, default=7, help='number of nodes in a graph')
 parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpus', type=str, default=None, help='CUDA_VISBLE_DEVICES setting')
@@ -44,10 +45,10 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
     return loader
 
 
-num_nodes = 100
+num_nodes = args.nodes
 train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
-model = GaussianGraphVAE(num_nodes=num_nodes)
+model = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes*52, z_dim=num_nodes*3)
 
 if args.cuda:
     model.cuda()
@@ -89,12 +90,12 @@ for epoch in range(1, args.epochs + 1):
         sample = sample.cuda()
     sampled_adj_mat = model.decode(sample).cpu()
 
-    for idx, th in enumerate((0.5, 0.625, 0.75, 0.95)):
+    for idx, th in enumerate((0.99,)):
         sampled_adj_mat = sampled_adj_mat > th
         sampled_adj_mat = sampled_adj_mat.view(-1, num_nodes, num_nodes)
         mat = sampled_adj_mat.data.cpu().numpy()
         print(mat.shape)
-        valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
+        valids = np.mean([(np.allclose(m, m.T, atol=1e-8) and np.count_nonzero(m)) for m in mat])
         avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
         print('(%d)[ %d ] %5.4f are valid matrices. %5.4f non zero' % (
         idx + 1, int(th * 100), valids, np.count_nonzero(mat) / mat.size))

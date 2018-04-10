@@ -45,7 +45,8 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
 
 
 num_nodes = 100
-train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes,num_nodes), batch_size=32, shuffle=True)
+train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes,num_nodes), batch_size=args.batch_size,
+                          shuffle=True)
 model = GaussianGraphVAE(num_nodes=num_nodes)
 
 if args.cuda:

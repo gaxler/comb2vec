@@ -50,7 +50,7 @@ model = GaussianGraphVAE(num_nodes=100)
 if args.cuda:
     model.cuda()
 
-for k, v in model.state_dict():
+for k, v in model.state_dict().items():
     print('%s: %s' % (k, v.type()))
 
 optimizer = optim.Adam(model.parameters(), lr=1e-3)

@@ -22,8 +22,8 @@ class AdjMatSolutionPklDictDataset(Dataset):
         with graph_pickle.open('rb') as fp:
             graph_dict = pkl.load(fp)
 
-        adjecency = graph_dict['adj_mat']
-        feasable_solution = graph_dict['solution']
+        adjecency = graph_dict['adj_mat'].astype(np.float32)
+        feasable_solution = graph_dict['solution'].astype(np.float32)
 
         adjecency = torch.from_numpy(adjecency)
         feasable_solution = torch.from_numpy(feasable_solution)

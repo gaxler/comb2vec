@@ -13,7 +13,7 @@ import os
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -26,8 +26,8 @@ parser.add_argument('--data-path', type=str, default=None, help='path to data di
 
 args = parser.parse_args()
 
-if args.gpus is not None:
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
+args.cuda = not args.no_cuda and torch.cuda.is_available()
+if args.gpus is not None and args.cuda:
     os.environ['CUDA_VISBLE_DEVICES'] = args.gpus
 
 torch.manual_seed(args.seed)
@@ -42,8 +42,8 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
     return loader
 
 
-train_loader = get_loader('data_dir/mvc/cp_solutions_7_7', batch_size=32, shuffle=True)
-model = GaussianGraphVAE(num_nodes=7)
+train_loader = get_loader('data_dir/mvc/cp_solutions_100_100', batch_size=32, shuffle=True)
+model = GaussianGraphVAE(num_nodes=100)
 if args.cuda:
     model.cuda()
 

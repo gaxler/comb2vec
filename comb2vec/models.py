@@ -25,6 +25,7 @@ class Decoder(nn.Module):
         self.fc4 = nn.Linear(hid_dim, inp_dim)
 
         self.sigmoid = nn.Sigmoid()
+        self.relu = nn.ReLU()
 
     def forward(self, z):
         h3 = self.relu(self.fc3(z))

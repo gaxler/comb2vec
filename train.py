@@ -44,8 +44,9 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
     return loader
 
 
-train_loader = get_loader('data_dir/mvc/cp_solutions_100_100', batch_size=32, shuffle=True)
-model = GaussianGraphVAE(num_nodes=100)
+num_nodes = 100
+train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes,num_nodes), batch_size=32, shuffle=True)
+model = GaussianGraphVAE(num_nodes=num_nodes)
 
 if args.cuda:
     model.cuda()
@@ -86,6 +87,7 @@ if args.cuda:
 for epoch in range(1, args.epochs + 1):
     train(epoch)
     sampled_adj_mat = model.decode(sample).cpu() > 0.75
+    sampled_adj_mat =sampled_adj_mat.view(-1, num_nodes, num_nodes)
     mat = sampled_adj_mat.data.cpu().numpy()
     valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
     avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)

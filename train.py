@@ -63,6 +63,7 @@ def train(epoch):
         adj_mat = Variable(adj_mat)
         if args.cuda:
             adj_mat.cuda()
+            print (adj_mat.type())
         optimizer.zero_grad()
         recon_adj_mat, mu, logvar = model.forward(adj_mat)
         loss = model.loss_function(recon_adj_mat, adj_mat, mu, logvar)

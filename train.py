@@ -48,27 +48,27 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
 num_nodes = args.nodes
 train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
-model = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes*52, z_dim=num_nodes*3)
+graph2vec = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes * 52, z_dim=num_nodes * 3)
 
 if args.cuda:
-    model.cuda()
+    graph2vec.cuda()
 
-for k, v in model.state_dict().items():
+for k, v in graph2vec.state_dict().items():
     print('%s: %s' % (k, v.type()))
 
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(graph2vec.parameters(), lr=1e-3)
 
 
 def train(epoch):
-    model.train()
+    graph2vec.train()
     train_loss = 0
     for idx, (adj_mat, solution) in enumerate(train_loader):
         adj_mat = Variable(adj_mat)
         if args.cuda:
             adj_mat = adj_mat.cuda()
         optimizer.zero_grad()
-        recon_adj_mat, mu, logvar = model.forward(adj_mat)
-        loss = model.loss_function(recon_adj_mat, adj_mat, mu, logvar)
+        recon_adj_mat, mu, logvar = graph2vec.forward(adj_mat)
+        loss = graph2vec.loss_function(recon_adj_mat, adj_mat, mu, logvar)
         loss.backward()
         train_loss += loss.data[0]
         optimizer.step()
@@ -85,10 +85,10 @@ def train(epoch):
 for epoch in range(1, args.epochs + 1):
     train(epoch)
 
-    sample = Variable(torch.randn(100, model.z_dim))
+    sample = Variable(torch.randn(100, graph2vec.z_dim))
     if args.cuda:
         sample = sample.cuda()
-    sampled_adj_mat = model.decode(sample).cpu()
+    sampled_adj_mat = graph2vec.decode(sample).cpu()
 
     for idx, th in enumerate((0.9,)):
         sampled_adj_mat = sampled_adj_mat > th
@@ -97,6 +97,6 @@ for epoch in range(1, args.epochs + 1):
         print(mat.shape)
         valids = np.mean([(np.allclose(m, m.T, atol=1e-8) and (np.count_nonzero(m) > 0)) for m in mat])
         avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
-        print('(%d)[ %d ] %5.4f are valid matrices. %5.4f non zero' % (
-        idx + 1, int(th * 100), valids, np.count_nonzero(mat) / mat.size))
+        print('(%d)[ %d ] %5.4f are valid matrices. %5.4f non zero. av range %4.2f' % (
+        idx + 1, int(th * 100), valids, np.count_nonzero(mat) / mat.size, np.mean(avg_ranks)))
     # print('%3.2f mean rank' % (np.mean(avg_ranks)))

@@ -83,6 +83,6 @@ for epoch in range(1, args.epochs + 1):
     train(epoch)
     sampled_adj_mat = model.decode(sample).cpu() > 0.75
     mat = sampled_adj_mat.data.cpu().numpy()
-    valids = [np.allclose(m, m.T, atol=1e-8) for m in mat]
-    print('(%d) %3.2f are valift matrices')
+    valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
+    print('(%d) %3.2f are valift matrices' % (epoch, valids))
 

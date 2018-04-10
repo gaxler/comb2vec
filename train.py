@@ -62,6 +62,7 @@ optimizer = optim.Adam(graph2vec.parameters(), lr=1e-3)
 def train(epoch):
     graph2vec.train()
     train_loss = 0
+    graph_rank = 0
     for idx, (adj_mat, solution) in enumerate(train_loader):
         adj_mat = Variable(adj_mat)
         if args.cuda:
@@ -71,6 +72,7 @@ def train(epoch):
         loss = graph2vec.loss_function(recon_adj_mat, adj_mat, mu, logvar)
         loss.backward()
         train_loss += loss.data[0]
+        graph_rank += adj_mat.sum(2).mean()
         optimizer.step()
         if idx % args.log_interval == -1:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -78,8 +80,8 @@ def train(epoch):
                        100. * idx / len(train_loader),
                        loss.data[0] / len(adj_mat)))
 
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-        epoch, train_loss / len(train_loader.dataset)))
+    print('====> Epoch: {} Average loss: {:.4f} Mean Rank: {:.4f}'.format(
+        epoch, train_loss / len(train_loader.dataset), graph_rank / len(train_loader.dataset)))
 
 
 for epoch in range(1, args.epochs + 1):

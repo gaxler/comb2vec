@@ -80,12 +80,14 @@ def train(epoch):
         epoch, train_loss / len(train_loader.dataset)))
 
 
-sample = Variable(torch.randn(100, model.z_dim))
-if args.cuda:
-    sample = sample.cuda()
 
 for epoch in range(1, args.epochs + 1):
     train(epoch)
+
+    sample = Variable(torch.randn(100, model.z_dim))
+    if args.cuda:
+        sample = sample.cuda()
+
     sampled_adj_mat = model.decode(sample).cpu() > 0.75
     sampled_adj_mat =sampled_adj_mat.view(-1, num_nodes, num_nodes)
     mat = sampled_adj_mat.data.cpu().numpy()

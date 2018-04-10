@@ -88,5 +88,7 @@ for epoch in range(1, args.epochs + 1):
     sampled_adj_mat = model.decode(sample).cpu() > 0.75
     mat = sampled_adj_mat.data.cpu().numpy()
     valids = np.mean([np.allclose(m, m.T, atol=1e-8) for m in mat])
-    print('(%d) %3.2f are valift matrices' % (epoch, valids))
+    avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
+    print('(%d) %3.2f are valid matrices' % (epoch, valids))
+    print('%3.2f mean rank' % (np.mean(avg_ranks)))
 

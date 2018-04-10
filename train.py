@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
@@ -19,7 +20,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpus', type=str, default=None, help='CUDA_VISBLE_DEVICES setting')
 parser.add_argument('--data-path', type=str, default=None, help='path to data directory')
@@ -74,10 +75,14 @@ def train(epoch):
         epoch, train_loss / len(train_loader.dataset)))
 
 
-sample = Variable(torch.randn(5, model.z_dim))
+sample = Variable(torch.randn(100, model.z_dim))
 if args.cuda:
     sample = sample.cuda()
 
 for epoch in range(1, args.epochs + 1):
     train(epoch)
     sampled_adj_mat = model.decode(sample).cpu() > 0.75
+    mat = sampled_adj_mat.data.cpu().numpy()
+    valids = [np.allclose(m, m.T, atol=1e-8) for m in mat]
+    print('(%d) %3.2f are valift matrices')
+

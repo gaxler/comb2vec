@@ -91,9 +91,9 @@ class MinVertexCoverSolverFromGraph(IntegerProgramSolverFromGraph):
 
 
 if __name__ == '__main__':
-    it = graph_iterator_from_path('/home/gregory/projects/nips18/data/mvc/nodes_100_100')
+    it = graph_iterator_from_path('/home/gregory/projects/nips18/data/mvc/nodes_7_7')
 
-    save_path = Path('/home/gregory/projects/nips18/data/mvc/cp_solutions_100_100')
+    save_path = Path('/home/gregory/projects/nips18/data/mvc/cp_solutions_7_7')
 
     if not save_path.exists():
         save_path.mkdir(parents=True)
@@ -110,5 +110,5 @@ if __name__ == '__main__':
             with (save_path / ('cp_solution_%05d_%s.pkl' % (idx, g_description))).open('wb') as fp:
                 pkl.dump(d, fp)
 
-        print('(%04d) saved %d soluyions' % (i, len(stats._solutions)))
+        print('(%04d) saved %d solutions' % (i, len(stats._solutions)))
         print('-----------------------\n')

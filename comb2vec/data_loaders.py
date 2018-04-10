@@ -32,7 +32,7 @@ class AdjMatSolutionPklDictDataset(Dataset):
 
 
 if __name__ == '__main__':
-    test_dset = AdjMatSolutionPklDictDataset('/home/gregory/Academy/comb2vec/data/mvc/cp_solutions_5_5')
+    test_dset = AdjMatSolutionPklDictDataset('/home/gregory/projects/nips18/data/mvc/cp_solutions_7_7')
 
     for workers in range(1, 16):
         loader = DataLoader(dataset=test_dset, batch_size=2, shuffle=True, num_workers=workers)

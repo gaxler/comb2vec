@@ -72,7 +72,7 @@ def train(epoch):
         loss = graph2vec.loss_function(recon_adj_mat, adj_mat, mu, logvar)
         loss.backward()
         train_loss += loss.data[0]
-        graph_rank += adj_mat.sum(2).mean()
+        graph_rank += adj_mat.sum(2).mean().data[0]*args.batch_size
         optimizer.step()
         if idx % args.log_interval == -1:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(

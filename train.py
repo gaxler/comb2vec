@@ -90,12 +90,12 @@ for epoch in range(1, args.epochs + 1):
         sample = sample.cuda()
     sampled_adj_mat = model.decode(sample).cpu()
 
-    for idx, th in enumerate((0.99,)):
+    for idx, th in enumerate((0.9,)):
         sampled_adj_mat = sampled_adj_mat > th
         sampled_adj_mat = sampled_adj_mat.view(-1, num_nodes, num_nodes)
         mat = sampled_adj_mat.data.cpu().numpy()
         print(mat.shape)
-        valids = np.mean([(np.allclose(m, m.T, atol=1e-8) and np.count_nonzero(m)) for m in mat])
+        valids = np.mean([(np.allclose(m, m.T, atol=1e-8) and (np.count_nonzero(m) > 0)) for m in mat])
         avg_ranks = np.mean(np.sum(mat, axis=2), axis=1)
         print('(%d)[ %d ] %5.4f are valid matrices. %5.4f non zero' % (
         idx + 1, int(th * 100), valids, np.count_nonzero(mat) / mat.size))

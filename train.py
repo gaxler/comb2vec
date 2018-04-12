@@ -51,7 +51,7 @@ num_nodes = args.nodes
 train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
 graph2vec = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes * 52, z_dim=num_nodes * 3,
-                             enc_kwargs={'num_hidden': args.enc_hiddens}, dec_kwargs={'dec_hiddnes': args.dec_hiddens})
+                             enc_kwargs={'num_hidden': args.enc_hiddens}, dec_kwargs={'num_hidden': args.dec_hiddens})
 
 if args.cuda:
     graph2vec.cuda()

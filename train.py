@@ -25,6 +25,8 @@ parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpus', type=str, default=None, help='CUDA_VISBLE_DEVICES setting')
 parser.add_argument('--data-path', type=str, default=None, help='path to data directory')
+parser.add_argument('--enc-hiddens', type=int, default=1, help='Number of hidden encoder layeers')
+parser.add_argument('--dec-hiddens', type=int, default=1, help='Number of hidden decoder layeers')
 
 args = parser.parse_args()
 
@@ -48,7 +50,8 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
 num_nodes = args.nodes
 train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
-graph2vec = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes * 52, z_dim=num_nodes * 3)
+graph2vec = GaussianGraphVAE(num_nodes=num_nodes, hid_dim=num_nodes * 52, z_dim=num_nodes * 3,
+                             enc_kwargs={'num_hidden': args.enc_hiddens}, dec_kwargs={'dec_hiddnes': args.dec_hiddens})
 
 if args.cuda:
     graph2vec.cuda()

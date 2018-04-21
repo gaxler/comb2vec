@@ -104,7 +104,7 @@ class MLPEncoder(nn.Module):
         else:
             self.mlp4 = MLP(n_hid * 2, n_hid, n_hid, do_prob)
             print("Using MLP encoder.")
-        self.fc_out = nn.Linear(n_hid*2, n_out)
+        self.fc_out = nn.Linear(n_hid * 2, n_out)
         self.init_weights()
 
     def init_weights(self):
@@ -127,7 +127,7 @@ class MLPEncoder(nn.Module):
 
     def forward(self, input, rel_rec, rel_send):
 
-        x = input.view(input.size(0)*input.size(1), -1)
+        x = input.view(input.size(0) * input.size(1), -1)
 
         x = self.mlp1(x)  # 2-layer ELU net per node
 
@@ -144,6 +144,23 @@ class MLPEncoder(nn.Module):
         output = self.fc_out(x)
 
         return output.view(input.size(0), input.size(1), -1)
+
+
+class SolutionFaeture(nn.Module):
+
+    def __init__(self, feature_size, n_hid, n_out, do_prob=0.):
+        super(SolutionFaeture, self).__init__()
+        self.mlp1 = MLP(feature_size, n_hid, n_hid, do_prob)
+        self.fc_out = nn.Linear(n_hid, n_out)
+
+        self.bce_loss = nn.BCEWithLogitsLoss(size_average=True)
+
+    def forward(self, solution_codes):
+        x = self.mlp1(solution_codes)
+        return self.fc_out(x)
+
+
+
 
 
 class CNNEncoder(nn.Module):

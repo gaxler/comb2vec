@@ -1,4 +1,3 @@
-
 import networkx as nx
 import numpy as np
 
@@ -12,6 +11,7 @@ def graph_iterator_from_path(path, glob_str='*.pkl'):
     for graph_pickle in path.glob(glob_str):
         with graph_pickle.open('rb') as fp:
             yield pkl.load(fp), graph_pickle.stem
+
 
 class ORToolsIntegerSolutionBase(object):
 

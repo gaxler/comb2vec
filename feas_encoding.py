@@ -23,6 +23,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--nodes', type=int, default=20, help='number of nodes in a graph')
+parser.add_argument('--z-dim', type=int, default=20, help='Node represenation dim')
 parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpus', type=str, default=None, help='CUDA_VISBLE_DEVICES setting')
@@ -53,7 +54,7 @@ num_nodes = args.nodes
 train_loader = get_loader('data_dir/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
 
-d = num_nodes
+d = args.z_dim
 encoder = MLPEncoder(num_nodes, d, d)
 sol_classification = SolutionFaeture(feature_size=d, n_hid=d, n_out=1)
 
@@ -64,7 +65,7 @@ if args.cuda:
 for k, v in encoder.state_dict().items():
     print('%s: %s' % (k, v.type()))
 
-learning_rate = 1e-2
+learning_rate = 1e-3
 optimizer = optim.Adam(list(encoder.parameters()) + list(sol_classification.parameters()), lr=learning_rate)
 
 
@@ -95,7 +96,7 @@ def solution_is_cover(adj_mat, solution):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = learning_rate * (0.1 ** (epoch // 10))
+    lr = learning_rate * (0.1 ** (epoch // 100))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -109,12 +110,15 @@ def train(epoch):
     # random_sol = Bernoulli(probs=torch.FloatTensor([0.5]))
     for idx, (adj_mat, solution) in enumerate(train_loader):
         rel_rec, rel_send = adj_mat_to_tensors(adj_mat.numpy())
-        if np.random.rand() < 0.45:
-             # sol_tensor = random_sol.sample_n(adj_mat.size(0)*num_nodes).view(-1, num_nodes)
-             sol_tensor = solution
-        else:
-            ss = solution.size(1)
-            sol_tensor = torch.stack([z[torch.randperm(ss)] for z in solution])
+        indic = (torch.rand((solution.size(0), 1)) < 0.5).type(torch.FloatTensor)
+        ss = solution.size(1)
+        sol_tensor = indic*solution + (torch.ones_like(indic) - indic)*torch.stack([z[torch.randperm(ss)] for z in solution])
+        # if np.random.rand() < 0.45:
+        #      # sol_tensor = random_sol.sample_n(adj_mat.size(0)*num_nodes).view(-1, num_nodes)
+        #      sol_tensor = solution
+        # else:
+        #     ss = solution.size(1)
+        #     sol_tensor = torch.stack([z[torch.randperm(ss)] for z in solution])
         inputs = torch.eye(num_nodes).unsqueeze(0).expand(adj_mat.size(0), num_nodes, num_nodes).contiguous()
         is_cover = solution_is_cover(adj_mat, sol_tensor).unsqueeze(1)
 

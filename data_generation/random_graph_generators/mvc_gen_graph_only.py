@@ -48,7 +48,7 @@ if __name__ == '__main__':
     assert min_n is not None
     assert num_graph is not None
     assert p is not None
-    graph_types = {0: 'erdos_renyi', 1:'erdos_renyi', 2:'barabasi_albert'}
+    graph_types = {0: 'erdos_renyi', 1: 'erdos_renyi', 2: 'barabasi_albert'}
 
     seed = 1
     np.random.seed(seed=seed)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     print("Final Output: %s/gtype-%s-nrange-%d-%d-n_graph-%d-p-%.2f-m-%d.pkl" % (
 
-    save_dir, graph_type, min_n, max_n, num_graph, p, m))
+        save_dir, graph_type, min_n, max_n, num_graph, p, m))
     print("Generating graphs...")
     g_list = []
     numgenerated = 0
@@ -73,6 +73,7 @@ if __name__ == '__main__':
         cur_n = np.random.randint(max_n - min_n + 1) + min_n
 
         graph_type = graph_types[np.random.randint(3)]
+        p = 0.05 + np.random.rand() * (0.5 - 0.05)
 
         if graph_type == 'erdos_renyi':
             g = nx.erdos_renyi_graph(n=cur_n, p=p, seed=seed + i)
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         numgenerated += 1
 
         with open('%s/gtype-%s-nrange-%d-%d-n_graph-%d-p-%.2f-m-%d.pkl' % (
-        save_dir, graph_type, min_n, max_n, numgenerated, p, m), 'ab') as fout:
+                save_dir, graph_type, min_n, max_n, numgenerated, p, m), 'ab') as fout:
             cp.dump(g, fout)
 
-        print('Generated %d, iterations %d' %(numgenerated, i))
+        print('Generated %d, iterations %d' % (numgenerated, i))

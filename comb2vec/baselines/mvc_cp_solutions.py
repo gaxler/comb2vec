@@ -4,9 +4,11 @@ import _pickle as pkl
 from mvc_with_or_tools import graph_iterator_from_path, MinVertexCoverSolverFromGraph
 
 if __name__ == '__main__':
-    it = graph_iterator_from_path('/home/gregory/projects/nips18/data/mvc/nodes_20_20')
+    DATA_PATH = '/home/gregory/Academy/data'
+    # DATA_PATH = '/home/gregory/projects/nips18/data'
+    it = graph_iterator_from_path('%s/mvc/nodes_37_37' % DATA_PATH)
 
-    save_path = Path('/home/gregory/projects/nips18/data/mvc/cp_solutions_20_20')
+    save_path = Path('%s/mvc/cp_solutions_37_37' % DATA_PATH)
 
     if not save_path.exists():
         save_path.mkdir(parents=True)

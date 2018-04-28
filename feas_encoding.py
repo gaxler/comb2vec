@@ -207,8 +207,11 @@ def show(epoch):
         encoded_nodes = model.encoder(inputs, rel_rec=rel_rec, rel_send=rel_send)
         sol_codes = torch.matmul(sol_tensor.unsqueeze(1), encoded_nodes).squeeze(1)
 
+        encoded_nodes = encoded_nodes.squeeze().data.cpu().numpy()
         sol_codes = sol_codes.data.cpu().numpy()
+        sol_codes = np.vstack([sol_codes, encoded_nodes])
         is_cover = is_cover.squeeze().numpy()
+        is_cover = np.concatenate([is_cover, np.ones(encoded_nodes.shape[0])*2])
         df = pd.DataFrame()
         df['x'] = sol_codes[:, 0]
         df['y'] = sol_codes[:, 1]
@@ -217,13 +220,10 @@ def show(epoch):
         return plot
 
 
-
-
-
 if __name__ == '__main__':
     for epoch in range(1, args.epochs + 1):
-        av_loss = train(epoch)
         plot = show(epoch)
-        plot.axes[0,0].set_xlim(-5., 5.)
-        plot.axes[0,0].set_ylim(-5., 5.)
+        plot.axes[0,0].set_xlim(-15., 35.)
+        plot.axes[0,0].set_ylim(-15., 35.)
         plot.savefig('/home/gregory/projects/nips18/experiments/mvc_viz/epoch%d.png' % epoch)
+        av_loss = train(epoch)

@@ -24,8 +24,9 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--nodes', type=int, default=20, help='number of nodes in a graph')
-parser.add_argument('--z-dim', type=int, default=20, help='Node represenation dim')
+parser.add_argument('--nodes', type=int, default=11, help='number of nodes in a graph')
+parser.add_argument('--z-dim', type=int, default=2, help='Node represenation dim')
+parser.add_argument('--hid-dim', type=int, default=16, help='Hidden layers dim')
 parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpus', type=str, default=None, help='CUDA_VISBLE_DEVICES setting')
@@ -35,10 +36,11 @@ parser.add_argument('--dec-hiddens', type=int, default=1, help='Number of hidden
 
 args = parser.parse_args()
 
-args.cuda = not args.no_cuda and torch.cuda.is_available()
 if args.gpus is not None:
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     print('Using GPUs: %s' % args.gpus)
+
+args.cuda = not args.no_cuda
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -56,19 +58,26 @@ num_nodes = args.nodes
 train_loader = get_loader('../data/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
                           shuffle=True)
 
-d = args.z_dim
-encoder = MLPEncoder(num_nodes, d, d)
-sol_classification = SolutionFaeture(feature_size=d, n_hid=d, n_out=1)
+z_dim = args.z_dim
+
+
+class Model(torch.nn.Module):
+
+    def __init__(self):
+        super(Model, self).__init__()
+        self.encoder = MLPEncoder(n_in=num_nodes, n_hid=args.hid_dim, n_out=z_dim)
+        self.feasability_classifier = SolutionFaeture(feature_size=z_dim, n_hid=args.hid_dim, n_out=1)
+
+model = Model()
 
 if args.cuda:
-    encoder.cuda()
-    sol_classification.cuda()
+    model.cuda()
 
-for k, v in encoder.state_dict().items():
+for k, v in model.state_dict().items():
     print('%s: %s' % (k, v.type()))
 
 learning_rate = 1e-3
-optimizer = optim.Adam(list(encoder.parameters()) + list(sol_classification.parameters()), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 
 def adj_mat_to_tensors(off_diag: np.array, dtype=np.float32) -> (torch.FloatTensor, torch.FloatTensor):
@@ -104,8 +113,7 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 def train(epoch):
-    encoder.train()
-    sol_classification.train()
+    model.train()
     adjust_learning_rate(optimizer, epoch)
     train_loss = 0
     valid_sols = 0
@@ -141,11 +149,11 @@ def train(epoch):
 
         back_tix = time.time()
         optimizer.zero_grad()
-        encoded_nodes = encoder(inputs, rel_rec=rel_rec, rel_send=rel_send)
+        encoded_nodes = model.encoder(inputs, rel_rec=rel_rec, rel_send=rel_send)
         sol_codes = torch.matmul(sol_tensor.unsqueeze(1), encoded_nodes).squeeze(1)
 
-        logits = sol_classification(sol_codes)
-        loss = sol_classification.bce_loss(logits, is_cover)
+        logits = model.feasability_classifier(sol_codes)
+        loss = model.feasability_classifier.bce_loss(logits, is_cover)
 
         loss.backward()
         train_loss += loss.data[0] * inputs.size(0)

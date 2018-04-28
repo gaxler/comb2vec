@@ -160,9 +160,6 @@ class SolutionFaeture(nn.Module):
         return self.fc_out(x)
 
 
-
-
-
 class CNNEncoder(nn.Module):
     def __init__(self, n_in, n_hid, n_out, do_prob=0., factor=True):
         super(CNNEncoder, self).__init__()

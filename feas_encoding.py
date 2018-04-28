@@ -1,5 +1,7 @@
 import time
 
+import seaborn as sns
+import pandas as pd
 import numpy as np
 import torch
 from torch import optim
@@ -11,6 +13,8 @@ from comb2vec.data_loaders.adjacency_mat import AdjMatSolutionPklDictDataset, Ad
 from comb2vec.utils import encode_onehot, encode_onehot_known_labels
 
 from torch.distributions import Bernoulli
+
+from itertools import product
 
 import argparse
 import os
@@ -55,8 +59,8 @@ def get_loader(path_to_data, batch_size, num_workers=3, shuffle=False, pin_memor
 
 
 num_nodes = args.nodes
-train_loader = get_loader('../data/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size,
-                          shuffle=True)
+train_loader = get_loader('../data/mvc/cp_solutions_%d_%d' % (num_nodes, num_nodes), batch_size=args.batch_size, shuffle=True)
+single_loader = get_loader('../data/mvc/cp_solutions_%d_%d/single_graph' % (num_nodes, num_nodes), batch_size=1, shuffle=True)
 
 z_dim = args.z_dim
 
@@ -174,6 +178,50 @@ def train(epoch):
     return av_loss
 
 
+def show(epoch):
+    valid_sols = 0
+
+    for idx, (adj_mat, solution) in enumerate(single_loader):
+        rel_rec, rel_send = adj_mat_to_tensors(adj_mat.numpy())
+
+        sol_tensor = np.array(list(product(*(range(2) for _ in range(num_nodes)))), dtype=np.float32)
+        sol_tensor = torch.from_numpy(sol_tensor)
+        inputs = torch.eye(num_nodes).unsqueeze(0).expand(adj_mat.size(0), num_nodes, num_nodes).contiguous()
+
+        adj_mat = adj_mat.expand(sol_tensor.size(0), num_nodes, num_nodes)
+        is_cover = solution_is_cover(adj_mat, sol_tensor).unsqueeze(1)
+
+        valid_sols += is_cover.mean() * is_cover.size(0)
+
+        inputs = Variable(inputs)
+        rel_rec = Variable(rel_rec)
+        rel_send = Variable(rel_send)
+        sol_tensor = Variable(sol_tensor)
+
+        if args.cuda:
+            rel_rec = rel_rec.cuda()
+            rel_send = rel_send.cuda()
+            inputs = inputs.cuda()
+            sol_tensor = sol_tensor.cuda()
+
+        encoded_nodes = model.encoder(inputs, rel_rec=rel_rec, rel_send=rel_send)
+        sol_codes = torch.matmul(sol_tensor.unsqueeze(1), encoded_nodes).squeeze(1)
+
+        sol_codes = sol_codes.data.cpu().numpy()
+        is_cover = is_cover.squeeze().numpy()
+        df = pd.DataFrame()
+        df['x'] = sol_codes[:, 0]
+        df['y'] = sol_codes[:, 1]
+        df['cover'] = is_cover
+        plot = sns.lmplot('x', 'y', data=df, hue='cover', fit_reg=False)
+        return plot
+
+
+
+
+
 if __name__ == '__main__':
     for epoch in range(1, args.epochs + 1):
         av_loss = train(epoch)
+        plot = show(epoch)
+        plot.savefig('/home/gregory/projects/nips18/experiments/mvc_viz/epoch%d.png' % epoch)

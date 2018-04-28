@@ -224,4 +224,6 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs + 1):
         av_loss = train(epoch)
         plot = show(epoch)
+        plot.axes[0,0].set_xlim(-5., 5.)
+        plot.axes[0,0].set_ylim(-5., 5.)
         plot.savefig('/home/gregory/projects/nips18/experiments/mvc_viz/epoch%d.png' % epoch)

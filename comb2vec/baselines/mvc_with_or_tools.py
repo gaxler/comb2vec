@@ -61,15 +61,24 @@ class MinVertexCoverSolverFromGraph(IntegerProgramSolverFromGraph):
             edge_decision_vars = (self.decision_vars[v] for v in edge)
             self._add_ge_sum_constraint(edge_decision_vars, sum_value=sum_value)
 
-    def solve(self, step=1):
+    def build_objective(self, step):
         solver = self.solver
 
         obj_expr = solver.IntVar(0, len(self.decision_vars), "obj_expr")
         solver.Add(obj_expr == sum(self.decision_vars.values()))
         objective = solver.Minimize(obj_expr, step)
+
         decision_builder = solver.Phase(list(self.decision_vars.values()),
                                         solver.CHOOSE_RANDOM,
                                         solver.ASSIGN_RANDOM_VALUE)
+
+        return obj_expr, objective, decision_builder
+
+    def solve(self, step=1):
+        solver = self.solver
+
+        obj_expr, objective, decision_builder = self.build_objective(step=step)
+
         # Create a solution collector.
         collector = solver.AllSolutionCollector()
         # Add the decision variables.
